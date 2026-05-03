@@ -1,0 +1,25 @@
+{
+  "name": "workflow-orchestration",
+  "version": "0.1.0",
+  "description": "A dependency-free starter for defining and running ordered workflows.",
+  "type": "module",
+  "private": false,
+  "license": "MIT",
+  "author": "Shaun Smith",
+  "bin": {
+    "workflow-orchestration": "./bin/workflow-orchestration.js"
+  },
+  "scripts": {
+    "start": "node ./bin/workflow-orchestration.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "workflow",
+    "orchestration",
+    "automation",
+    "pipeline"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}
