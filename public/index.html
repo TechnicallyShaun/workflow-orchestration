@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Workflow Orchestration</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>Workflow Orchestration</h1>
+        <p>Define workflows, create tickets, and move work through visible state.</p>
+      </div>
+      <nav aria-label="Primary">
+        <button class="nav-button active" data-view="workflows" type="button">Workflows</button>
+        <button class="nav-button" data-view="tickets" type="button">Tickets</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="workflows-view" class="view active" aria-labelledby="workflows-title">
+        <div class="split">
+          <section class="panel">
+            <div class="section-title">
+              <h2 id="workflows-title">Workflow Builder</h2>
+              <button id="new-workflow" class="secondary" type="button">New</button>
+            </div>
+
+            <label>
+              Name
+              <input id="workflow-name" data-testid="workflow-name" autocomplete="off">
+            </label>
+            <label>
+              Description
+              <textarea id="workflow-description" rows="2"></textarea>
+            </label>
+            <label>
+              First step
+              <select id="first-step" data-testid="first-step"></select>
+            </label>
+
+            <div id="validation-messages" class="messages" role="status"></div>
+            <button id="save-workflow" data-testid="save-workflow" type="button">Save Workflow</button>
+          </section>
+
+          <section class="panel">
+            <div class="section-title">
+              <h2>Saved Workflows</h2>
+            </div>
+            <div id="workflow-list" class="list"></div>
+          </section>
+        </div>
+
+        <section class="band">
+          <div class="section-title">
+            <h2>Steps</h2>
+            <button id="add-step" data-testid="add-step" type="button">Add Step</button>
+          </div>
+          <div id="step-chain" class="chain"></div>
+        </section>
+
+        <section class="band">
+          <div class="section-title">
+            <h2>Transitions</h2>
+            <button id="add-transition" data-testid="add-transition" type="button">Add Transition</button>
+          </div>
+          <div id="transition-list" class="transition-list"></div>
+        </section>
+      </section>
+
+      <section id="tickets-view" class="view" aria-labelledby="tickets-title">
+        <div class="split">
+          <section class="panel">
+            <h2 id="tickets-title">Add Ticket</h2>
+            <label>
+              Ticket number
+              <input id="ticket-number" data-testid="ticket-number" placeholder="WO-1" autocomplete="off">
+            </label>
+            <label>
+              Ticket content JSON
+              <textarea id="ticket-content" data-testid="ticket-content" rows="8">{
+  "type": "story",
+  "title": "Add workflow editor",
+  "priority": "high"
+}</textarea>
+            </label>
+            <label>
+              Workflow
+              <select id="ticket-workflow" data-testid="ticket-workflow"></select>
+            </label>
+            <div class="button-row">
+              <button id="create-ticket" data-testid="create-ticket" type="button">Create Ticket</button>
+              <button id="create-start-ticket" data-testid="create-start-ticket" type="button">Create and Start</button>
+            </div>
+            <div id="ticket-form-messages" class="messages" role="status"></div>
+          </section>
+
+          <section class="panel detail">
+            <h2>Ticket Detail</h2>
+            <div id="ticket-detail" data-testid="ticket-detail" class="empty">Select a ticket to inspect its state.</div>
+          </section>
+        </div>
+
+        <section class="band">
+          <h2>Tickets</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Number</th>
+                  <th>Workflow</th>
+                  <th>Current step</th>
+                  <th>Status</th>
+                  <th>Last updated</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="ticket-list"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

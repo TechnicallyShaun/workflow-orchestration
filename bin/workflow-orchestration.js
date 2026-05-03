@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { createWorkflow, runWorkflow } from "../src/index.js";
+import { listen } from "../src/index.js";
 
-const workflow = createWorkflow()
-  .step("extract", async () => ({ records: 3 }))
-  .step("transform", async ({ extract }) => ({ processed: extract.records }))
-  .step("load", async ({ transform }) => ({ inserted: transform.processed }));
+const portArg = process.argv.find((arg) => arg.startsWith("--port="));
+const port = portArg ? Number(portArg.split("=")[1]) : Number(process.env.PORT ?? 3000);
 
-const result = await runWorkflow(workflow);
+const { url } = await listen({
+  port,
+  dataFile: process.env.WORKFLOW_DATA_FILE ?? "data/store.json"
+});
 
-console.log(JSON.stringify(result, null, 2));
+console.log(`Workflow Orchestration is running at ${url}`);
