@@ -14,6 +14,7 @@
       </div>
       <nav aria-label="Primary">
         <button class="nav-button active" data-view="workflows" type="button">Workflows</button>
+        <button class="nav-button" data-view="designer" type="button">Workflow Designer</button>
         <button class="nav-button" data-view="tickets" type="button">Tickets</button>
       </nav>
     </header>
@@ -66,6 +67,31 @@
             <button id="add-transition" data-testid="add-transition" type="button">Add Transition</button>
           </div>
           <div id="transition-list" class="transition-list"></div>
+        </section>
+      </section>
+
+      <section id="designer-view" class="view" aria-labelledby="designer-title">
+        <section class="designer-shell">
+          <div class="designer-toolbar">
+            <div>
+              <h2 id="designer-title">Workflow Designer</h2>
+              <p class="muted">Visual flow chart for the selected workflow.</p>
+            </div>
+            <label class="designer-picker">
+              Workflow
+              <select id="designer-workflow"></select>
+            </label>
+            <div class="designer-actions">
+              <button id="designer-new-workflow" class="secondary" type="button">New</button>
+              <button id="designer-save-workflow" type="button">Save</button>
+            </div>
+          </div>
+          <div id="designer-messages" class="messages designer-messages" role="status"></div>
+          <div id="designer-summary" class="designer-summary"></div>
+          <div class="designer-workspace">
+            <div id="designer-canvas" class="designer-canvas" aria-live="polite"></div>
+            <aside id="designer-sidebar" class="designer-sidebar" aria-label="Step design"></aside>
+          </div>
         </section>
       </section>
 
