@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 
 export const STEP_TYPES = ["cli", "agent", "manual", "error"];
+export const EXECUTION_MODES = ["silent", "interactive", "manual"];
+export const OUTPUT_FORMATS = ["text", "json"];
+export const AGENT_TARGETS = ["codex", "copilot", "custom"];
 export const CONDITION_OPERATORS = [
   "equals",
   "notEquals",
@@ -21,6 +24,8 @@ export function createWorkflowDefinition(input = {}, deps = {}) {
     command: step.command ?? "",
     agentPrompt: step.agentPrompt ?? "",
     agentSkill: step.agentSkill ?? "",
+    designer: normalizeDesigner(step.designer),
+    execution: normalizeExecution(step),
     createdAt: step.createdAt ?? now,
     updatedAt: step.updatedAt ?? now
   }));
@@ -77,18 +82,26 @@ export function validateWorkflow(workflow) {
     }
 
     if (step.type === "cli" && (!step.command || step.command.trim() === "")) {
-      errors.push({ path: `${stepPath}.command`, message: "CLI steps have a command." });
+      const command = step.execution?.command ?? "";
+      if (!command || command.trim() === "") {
+        errors.push({ path: `${stepPath}.command`, message: "CLI steps have a command." });
+      }
     }
 
     if (
       step.type === "agent" &&
       (!step.agentPrompt || step.agentPrompt.trim() === "") &&
-      (!step.agentSkill || step.agentSkill.trim() === "")
+      (!step.agentSkill || step.agentSkill.trim() === "") &&
+      (!step.execution?.prompt || step.execution.prompt.trim() === "")
     ) {
       errors.push({
         path: `${stepPath}.agentPrompt`,
         message: "Agent steps have either a prompt or a skill."
       });
+    }
+
+    if (step.execution) {
+      validateExecution(step, stepPath, errors);
     }
   }
 
@@ -160,6 +173,45 @@ export function validateWorkflow(workflow) {
   return { valid: errors.length === 0, errors };
 }
 
+export function normalizeExecution(step = {}) {
+  const execution = step.execution && typeof step.execution === "object" ? step.execution : {};
+  const output = execution.output && typeof execution.output === "object" ? execution.output : {};
+  const agent = execution.agent && typeof execution.agent === "object" ? execution.agent : {};
+  const mode = execution.mode ?? (step.type === "manual" || step.type === "error" ? "manual" : "silent");
+
+  if (step.type === "cli") {
+    return {
+      mode,
+      shell: execution.shell ?? "powershell",
+      command: execution.command ?? step.command ?? "",
+      workingDirectory: execution.workingDirectory ?? "",
+      env: isPlainObject(execution.env) ? execution.env : {},
+      timeoutSeconds: normalizeTimeout(execution.timeoutSeconds),
+      output: normalizeOutput(output)
+    };
+  }
+
+  if (step.type === "agent") {
+    return {
+      mode,
+      agent: {
+        target: agent.target ?? execution.agentTarget ?? "codex",
+        command: agent.command ?? execution.agentCommand ?? "codex"
+      },
+      prompt: execution.prompt ?? step.agentPrompt ?? "",
+      skill: execution.skill ?? step.agentSkill ?? "",
+      workingDirectory: execution.workingDirectory ?? "",
+      env: isPlainObject(execution.env) ? execution.env : {},
+      timeoutSeconds: normalizeTimeout(execution.timeoutSeconds),
+      output: normalizeOutput(output)
+    };
+  }
+
+  return {
+    mode: "manual"
+  };
+}
+
 export function normalizeCondition(condition) {
   if (!condition || condition.operator === "default") {
     return null;
@@ -170,6 +222,73 @@ export function normalizeCondition(condition) {
     operator: condition.operator ?? "equals",
     value: condition.value ?? ""
   };
+}
+
+function normalizeDesigner(designer) {
+  if (!designer || typeof designer !== "object") {
+    return {
+      kind: "step",
+      conditionField: "ticket.content.type",
+      switchField: "ticket.content.type",
+      switchCases: []
+    };
+  }
+
+  return {
+    kind: ["step", "condition", "switch"].includes(designer.kind) ? designer.kind : "step",
+    conditionField: designer.conditionField ?? "ticket.content.type",
+    switchField: designer.switchField ?? "ticket.content.type",
+    switchCases: Array.isArray(designer.switchCases)
+      ? designer.switchCases.map(String).filter(Boolean)
+      : []
+  };
+}
+
+function validateExecution(step, stepPath, errors) {
+  const execution = step.execution;
+
+  if (!EXECUTION_MODES.includes(execution.mode)) {
+    errors.push({
+      path: `${stepPath}.execution.mode`,
+      message: "Execution mode is supported."
+    });
+  }
+
+  if (step.type === "agent") {
+    const target = execution.agent?.target ?? "codex";
+    if (!AGENT_TARGETS.includes(target)) {
+      errors.push({
+        path: `${stepPath}.execution.agent.target`,
+        message: "Agent target is supported."
+      });
+    }
+  }
+
+  if (execution.output && !OUTPUT_FORMATS.includes(execution.output.format)) {
+    errors.push({
+      path: `${stepPath}.execution.output.format`,
+      message: "Execution output format is supported."
+    });
+  }
+}
+
+function normalizeOutput(output) {
+  return {
+    format: output.format ?? "text",
+    stateKey: output.stateKey ?? ""
+  };
+}
+
+function normalizeTimeout(timeoutSeconds) {
+  if (timeoutSeconds === undefined || timeoutSeconds === null || timeoutSeconds === "") {
+    return 300;
+  }
+  const value = Number(timeoutSeconds);
+  return Number.isFinite(value) && value > 0 ? value : 300;
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function randomId(prefix) {
